@@ -1,3 +1,5 @@
 /build
 /tests/ndfind
 /ndfind.egg-info
+/dist
+/ndfind/main.c
