@@ -2,6 +2,9 @@
 
 import setuptools
 
+import numpy as np
+from Cython.Build import cythonize
+
 with open('README.md', 'r') as fh:
     long_description = fh.read()
 
@@ -15,6 +18,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     python_requires=">=3.7",
+    ext_modules=cythonize(["ndfind/main.pyx"]),
+    include_dirs=np.get_include(),
     install_requires=[
         'numpy',
     ],
