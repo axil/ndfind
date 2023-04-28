@@ -32,8 +32,8 @@ jobs:
     - name: Build wheel
       run: python -m cibuildwheel --output-dir dist/
       env:
-        CIBW_BUILD: [cp39-*_x86_64, cp310-*_x86_64]
-        CIBW_SKIP: [cp39-musllinux_x86_64, cp310-musllinux_x86_64]
+        CIBW_BUILD: cp39-*_x86_64 cp310-*_x86_64
+        CIBW_SKIP: cp39-musllinux_x86_64 cp310-musllinux_x86_64
 
     - uses: actions/upload-artifact@v3
       with:
