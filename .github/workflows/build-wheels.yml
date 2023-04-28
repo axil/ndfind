@@ -25,11 +25,25 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install cibuildwheel
 #        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Build sources
+      run: python setup.py sdist
+
     - name: Build wheel
       run: python -m cibuildwheel --output-dir dist/
       env:
         CIBW_BUILD: cp39-manylinux_x86_64
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         path: ./dist/*.whl
+
+    - name: Publish to Test PyPI
+      env:
+        TWINE_USERNAME: "__token__"
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN }}
+        TWINE_REPOSITORY_URL: "https://test.pypi.org/legacy/"
+      run: |
+        echo KEY: '${TWINE_PASSWORD}'
+        twine check dist/*
+        twine upload --verbose --skip-existing dist/*
