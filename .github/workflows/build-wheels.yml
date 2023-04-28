@@ -1,25 +1,25 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: Build wheels
+name: Build the wheels
 
 on: workflow_dispatch
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }} 
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
+    
+    - name: Set up python
       uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -29,14 +29,15 @@ jobs:
     - name: Build sources
       run: python setup.py sdist
 
-#    - name: Build wheel
-#      run: python -m cibuildwheel --output-dir dist/
-#      env:
-#        CIBW_BUILD: cp39-manylinux_x86_64
-#
-#    - uses: actions/upload-artifact@v3
-#      with:
-#        path: ./dist/*.whl
+    - name: Build wheel
+      run: python -m cibuildwheel --output-dir dist/
+      env:
+        CIBW_BUILD: [cp39-*_x86_64, cp310-*_x86_64]
+        CIBW_SKIP: [cp39-musllinux_x86_64, cp310-musllinux_x86_64]
+
+    - uses: actions/upload-artifact@v3
+      with:
+        path: ./dist/*.whl
 
     - name: Publish to Test PyPI
       env:
