@@ -22,7 +22,8 @@ jobs:
         python -m pip install wheel cibuildwheel numpy cython twine
 
     - name: Build sources
-      run: python setup.py sdist
+      run: |
+        python setup.py sdist
 
     - name: Publish to PyPI
       env:
