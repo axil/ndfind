@@ -6,14 +6,14 @@ name: Run system tests
 on: workflow_dispatch
 
 jobs:
-  build:
-
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }} 
+  test:
+    name: Run system tests on ${{ matrix.os }}, ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}, ${{ matrix.python-version }} 
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-latest]#, ubuntu-latest, macos-latest]
+        python-version: ["3.9", "3.10"]
 
     steps:
     - uses: actions/checkout@v3
