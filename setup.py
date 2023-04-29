@@ -10,7 +10,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='ndfind',
-    version='0.2',
+    version='0.3',
     author='Lev Maximov',
     author_email='lev.maximov@gmail.com',
     url='https://github.com/axil/ndfind',
@@ -21,7 +21,7 @@ setuptools.setup(
     ext_modules=cythonize(["ndfind/main.pyx"]),
     include_dirs=np.get_include(),
     install_requires=[
-        'numpy',
+        'numpy>=1.24',
     ],
     packages=['ndfind'],
     classifiers=[
