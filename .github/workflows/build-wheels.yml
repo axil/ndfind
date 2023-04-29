@@ -28,11 +28,10 @@ jobs:
     - name: Publish to PyPI
       env:
         TWINE_USERNAME: "__token__"
-        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }} 
 #        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN }}
 #        TWINE_REPOSITORY_URL: "https://test.pypi.org/legacy/"
       run: |
-#        echo KEY: '${TWINE_PASSWORD}'
         twine check dist/*
         twine upload --verbose --skip-existing dist/*
 
@@ -79,6 +78,5 @@ jobs:
 #        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN }}
 #        TWINE_REPOSITORY_URL: "https://test.pypi.org/legacy/"
       run: |
-#        echo KEY: '${TWINE_PASSWORD}'
         twine check dist/*
         twine upload --verbose --skip-existing dist/*
