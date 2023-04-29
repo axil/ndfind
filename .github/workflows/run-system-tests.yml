@@ -7,8 +7,8 @@ on: workflow_dispatch
 
 jobs:
   test:
-    name: Run system tests on ${{ matrix.os }}, ${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}, ${{ matrix.python-version }} 
+    name: Test ${{ matrix.os }} x ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
