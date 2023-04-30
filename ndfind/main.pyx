@@ -30,6 +30,7 @@ ctypedef fused integer2:
 ctypedef fused floating:
     np.float32_t
     np.float64_t
+    np.longdouble_t
 
 ctypedef fused int_or_float:
     integer
