@@ -4,7 +4,7 @@ from itertools import permutations, product
 from decimal import Decimal as D
 
 #from npi import first_above
-from ndfind import first_above
+from ndfind.first_above import first_above
 #from pyfind import first_above
 
 def test0():
@@ -114,6 +114,18 @@ def test_first_above1():
 def test_raises():
     with pytest.raises(ValueError):
         first_above([1, 2, 3], 7, raises=True)
+
+SIGNED = [np.int8, np.int16, np.int32, np.int64]
+UNSIGNED = [np.uint8, np.uint16, np.uint32, np.uint64]
+
+def test_mixed():
+    for t1 in SIGNED:
+        for t2 in UNSIGNED:
+            assert first_above(np.array([-1,1,2], dtype=t1), t2(1)) == 2
+
+    for t1 in UNSIGNED:
+        for t2 in SIGNED:
+            assert first_above(np.array([2,3,5], dtype=t1), t2(-1)) == 0
 
 if __name__ == "__main__":
     pytest.main(["-s", "-x", __file__])  # + '::test7'])
