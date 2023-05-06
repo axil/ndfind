@@ -58,7 +58,7 @@ def test5():
     assert find(a2, 0.8) == 3
 
 INTS_AND_FLOATS = [np.int8, np.uint8, np.int16, np.uint16, np.int32, np.uint32, 
-                   np.int64, np.uint64, np.float32, np.float64]
+                   np.int64, np.uint64, np.float32, np.float64, np.longdouble]
 def test_int_float():
     for a_type in INTS_AND_FLOATS:
         for v_type in INTS_AND_FLOATS + [int, float]:
