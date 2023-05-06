@@ -1,4 +1,4 @@
-# distutils: include_dirs = C:\Users\ASUS\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\core\include
+# distutils: include_dirs = /home/lev/try_ndfind/env/lib/python3.9/site-packages/numpy/core/include
 # cython: language_level=3
 import numpy as np
 cimport numpy as np
@@ -30,6 +30,7 @@ ctypedef fused integer2:
 ctypedef fused floating:
     np.float32_t
     np.float64_t
+    np.longdouble_t
 
 ctypedef fused int_or_float:
     integer
@@ -52,7 +53,6 @@ ctypedef fused numeric:
     integer
     floating
     complexfloating
-
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 @cython.wraparound(False)   # Deactivate negative indexing.
@@ -135,6 +135,7 @@ def _float_find_nd(a, int_or_float[:] a0, cfloating[:] va, cfloating rtol=1e-05,
             if minv < ch[j] < maxv:
                 return i*n+j
     return -1
+
 
 #@cython.boundscheck(False)  # Deactivate bounds checking
 #@cython.wraparound(False)   # Deactivate negative indexing.
@@ -306,7 +307,10 @@ def find(a, v, rtol=1e-05, atol=1e-08, sorted=False, missing=-1, raises=False):
 
     generic_float_mode = complex_mode = float_mode = int_mode = nan_mode \
                        = generic_mode = False
-    if np.issubdtype(a.dtype, np.float16) or isinstance(v, np.float16):
+    if np.issubdtype(a.dtype, np.complex256) or isinstance(v, np.complex256):
+        generic_float_mode = True
+        complex_mode = True
+    elif np.issubdtype(a.dtype, np.float16) or isinstance(v, np.float16):
         generic_float_mode = True
     elif np.issubdtype(a.dtype, np.complexfloating):
         if not isinstance(v, complex):
@@ -336,15 +340,15 @@ def find(a, v, rtol=1e-05, atol=1e-08, sorted=False, missing=-1, raises=False):
     else:
         generic_mode = True
     
-    if generic_float_mode:
+    if complex_mode and sorted:
+        raise ValueError('`sorted=True` optimization cannot be used with complex numbers')
+    elif generic_float_mode:
         if sorted:
             res = _py_float_find_sorted(a, v, rtol=rtol, atol=atol)
         else:
             res = _py_float_find_unsorted(a, v, rtol=rtol, atol=atol)
     elif complex_mode:
-        if sorted:
-            raise ValueError('`sorted=True` optimization cannot be used with complex numbers')
-        elif np.isfinite(v):
+        if np.isfinite(v):
             res = _complex_find_nd(a, np.zeros(1, dtype=a.dtype), v, rtol=rtol, atol=atol)
         else:
             res = _generic_float_find(a, v, sorted=False)
