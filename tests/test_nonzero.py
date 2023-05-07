@@ -3,9 +3,7 @@ import numpy as np
 from itertools import permutations, product
 from decimal import Decimal as D
 
-#from npi.first_nonzero1 import first_nonzero
 from ndfind import first_nonzero
-#from npi.pyfind import first_nonzero
 
 NUMERICS = [np.int8, np.uint8, np.int16, np.uint16, np.int32, np.uint32, 
             np.int64, np.uint64, np.float16, np.float32, np.float64, 

@@ -3,9 +3,7 @@ import numpy as np
 from itertools import permutations, product
 from decimal import Decimal as D
 
-#from npi.ndfind6a import find
 from ndfind import find
-#from npi.pyfind import find
 
 def test0():
     assert find([3, 1, 4, 1, 5], 4) == 2
@@ -177,6 +175,12 @@ def test_mixed_types():
     a = np.array([D(1), D(2), D(3), np.nan])
     assert find(a, np.nan) == 3
 
+def test_signed_unsigned():
+    assert find(np.array([2**62], np.int64), np.uint64(2**62)) == 0
+    assert find(np.array([2**62], np.uint64), np.int64(2**62)) == 0
+    assert find(np.array([2**62], np.int64), np.uint64(2**62+1)) == -1
+    assert find(np.array([2**62], np.uint64), np.int64(2**62+1)) == -1
+    assert find(np.array([2**64-1], np.uint64), np.int64(-1)) == -1
 
 if __name__ == "__main__":
     pytest.main(["-s", "-x", __file__])  # + '::test7'])

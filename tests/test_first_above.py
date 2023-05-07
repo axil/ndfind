@@ -3,9 +3,7 @@ import numpy as np
 from itertools import permutations, product
 from decimal import Decimal as D
 
-#from npi import first_above
 from ndfind import first_above
-#from pyfind import first_above
 
 def test0():
     assert first_above([3, 1, 4, 1, 5], 4) == 4
