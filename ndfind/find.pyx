@@ -140,12 +140,12 @@ def _int_find_1d(a, v):
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 @cython.wraparound(False)   # Deactivate negative indexing.
-def _int_find_2d(integer[:,:] a, integer2[:] va):
+def _signed_find_2d(signedinteger[:,:] a, signedinteger2[:] va):
     """
     Returns an index of the first occurrence of v in a.
     If v is missing from a, returns -1.
     """
-    cdef integer2 v = va[0]
+    cdef signedinteger2 v = va[0]
     cdef Py_ssize_t n = a.shape[0]
     cdef Py_ssize_t m = a.shape[1]
     cdef Py_ssize_t i, j
@@ -158,16 +158,55 @@ def _int_find_2d(integer[:,:] a, integer2[:] va):
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 @cython.wraparound(False)   # Deactivate negative indexing.
-def _int_find_nd(a, integer[:] a0, integer2[:] va):
+def _unsigned_find_2d(unsignedinteger[:,:] a, unsignedinteger2[:] va):
     """
     Returns an index of the first occurrence of v in a.
     If v is missing from a, returns -1.
     """
-    cdef integer2 v = va[0]
+    cdef unsignedinteger2 v = va[0]
+    cdef Py_ssize_t n = a.shape[0]
+    cdef Py_ssize_t m = a.shape[1]
+    cdef Py_ssize_t i, j
+
+    for i in range(n):
+        for j in range(m):
+            if a[i, j] == v:
+                return m*i+j
+    return -1
+
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing.
+def _signed_find_nd(a, signedinteger[:] a0, signedinteger2[:] va):
+    """
+    Returns an index of the first occurrence of v in a.
+    If v is missing from a, returns -1.
+    """
+    cdef signedinteger2 v = va[0]
     cdef Py_ssize_t res = -1
     cdef Py_ssize_t i, j
     cdef Py_ssize_t n
-    cdef np.ndarray[integer] ch
+    cdef np.ndarray[signedinteger] ch
+    #cdef integer[:] ch
+    for i, chunk in enumerate(np.nditer(a, flags=['external_loop'], order='C')):
+        ch = chunk
+        n = ch.shape[0]
+        for j in range(n):
+            if ch[j] == v:
+                return i*n+j
+    return -1
+
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing.
+def _unsigned_find_nd(a, unsignedinteger[:] a0, unsignedinteger2[:] va):
+    """
+    Returns an index of the first occurrence of v in a.
+    If v is missing from a, returns -1.
+    """
+    cdef unsignedinteger2 v = va[0]
+    cdef Py_ssize_t res = -1
+    cdef Py_ssize_t i, j
+    cdef Py_ssize_t n
+    cdef np.ndarray[unsignedinteger] ch
     #cdef integer[:] ch
     for i, chunk in enumerate(np.nditer(a, flags=['external_loop'], order='C')):
         ch = chunk
@@ -458,12 +497,16 @@ def find(a, v, rtol=1e-05, atol=1e-08, sorted=False, missing=-1, raises=False):
                 if signed_int_mode:
                     res = _signed_find_1d(a, np.array([v]))
                 else:
-                    print('zzz', a.dtype, type(v))
                     res = _unsigned_find_1d(a, np.array([v]))
             elif a.ndim == 2:
-                res = _int_find_2d(a, np.array([v]))
+                if signed_int_mode:
+                    res = _signed_find_2d(a, np.array([v]))
+                else:
+                    res = _unsigned_find_2d(a, np.array([v]))
+            elif signed_int_mode:
+                res = _signed_find_nd(a, np.array([v]))
             else:
-                res = _int_find_nd(a, np.array([v]))
+                res = _unsigned_find_nd(a, np.array([v]))
         elif nan_mode:
             res = _nan_find(a, sorted=sorted)
         else:
