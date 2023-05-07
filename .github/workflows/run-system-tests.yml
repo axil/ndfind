@@ -25,7 +25,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pytest 
-#        pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple -U ndfind 
+        # pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple -U ndfind 
         pip install ndfind 
     - name: Test with pytest
       run: |
