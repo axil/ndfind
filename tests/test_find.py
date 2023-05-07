@@ -64,6 +64,7 @@ def test_int_float():
         for v_type in INTS_AND_FLOATS + [int, float]:
             a = np.array([0, 1, 2, 3], dtype=a_type)
             v = v_type(2)
+            print(a_type, v_type)
             assert find(a, v) == 2, (a_type, v_type)
             assert find(a, v, sorted=True) == 2, (a_type, v_type)
 

@@ -4,7 +4,7 @@ from itertools import permutations, product
 from decimal import Decimal as D
 
 #from npi import first_above
-from ndfind.first_above import first_above
+from ndfind import first_above
 #from pyfind import first_above
 
 def test0():

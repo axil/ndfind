@@ -1,5 +1,6 @@
-# distutils: include_dirs = /home/lev/try_ndfind/env/lib/python3.9/site-packages/numpy/core/include
+# distutils: define_macros=NPY_NO_DEPRECATED_API=1
 # cython: language_level=3
+import sys
 import numpy as np
 cimport numpy as np
 
@@ -22,6 +23,30 @@ ctypedef fused integer2:
     np.int16_t
     np.int32_t
     np.int64_t
+    np.uint8_t
+    np.uint16_t
+    np.uint32_t
+    np.uint64_t
+
+ctypedef fused signedinteger:
+    np.int8_t
+    np.int16_t
+    np.int32_t
+    np.int64_t
+
+ctypedef fused signedinteger2:
+    np.int8_t
+    np.int16_t
+    np.int32_t
+    np.int64_t
+
+ctypedef fused unsignedinteger:
+    np.uint8_t
+    np.uint16_t
+    np.uint32_t
+    np.uint64_t
+
+ctypedef fused unsignedinteger2:
     np.uint8_t
     np.uint16_t
     np.uint32_t
@@ -56,12 +81,12 @@ ctypedef fused numeric:
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 @cython.wraparound(False)   # Deactivate negative indexing.
-def _int_find_1d(integer[:] a, integer2[:] va):
+def _signed_find_1d(signedinteger[:] a, signedinteger2[:] va):
     """
     Returns an index of the first occurrence of v in a.
     If v is missing from a, returns -1.
     """
-    cdef integer2 v = va[0]
+    cdef signedinteger2 v = va[0]
     cdef Py_ssize_t n = a.shape[0]
     cdef Py_ssize_t i
 
@@ -74,12 +99,51 @@ def _int_find_1d(integer[:] a, integer2[:] va):
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 @cython.wraparound(False)   # Deactivate negative indexing.
-def _int_find_2d(integer[:,:] a, integer2[:] va):
+def _unsigned_find_1d(unsignedinteger[:] a, unsignedinteger2[:] va):
     """
     Returns an index of the first occurrence of v in a.
     If v is missing from a, returns -1.
     """
-    cdef integer2 v = va[0]
+    cdef unsignedinteger2 v = va[0]
+    cdef Py_ssize_t n = a.shape[0]
+    cdef Py_ssize_t i
+
+    cdef Py_ssize_t res = -1
+    for i in range(n):
+        if a[i] == v:
+            res = i
+            break
+    return res
+
+def _int_find_1d(a, v):
+    """
+    Returns an index of the first occurrence of v in a.
+    If v is missing from a, returns -1.
+    """
+    a_signed, v_signed = np.issubdtype(a.dtype, np.signedinteger), isinstance(v, np.signedinteger)
+    if a_signed and v_signed:
+        return _signed_find_1d(a, v)
+    elif not a_signed and not v_signed:
+        return _unsigned_find_1d(a, v)
+    elif v_signed: # and a is unsigned
+        if v < 0:
+            return -1
+        else:
+            return _unsigned_find_1d(a, np.array([v], dtype=np.uint64))
+    else: # unsigned a and signed v
+        if isinstance(v, np.uint64) and v > 2**63:
+            return -1
+        else:
+            return _signed_find_1d(a, np.array([v], dtype=np.int64))
+
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing.
+def _signed_find_2d(signedinteger[:,:] a, signedinteger2[:] va):
+    """
+    Returns an index of the first occurrence of v in a.
+    If v is missing from a, returns -1.
+    """
+    cdef signedinteger2 v = va[0]
     cdef Py_ssize_t n = a.shape[0]
     cdef Py_ssize_t m = a.shape[1]
     cdef Py_ssize_t i, j
@@ -92,16 +156,55 @@ def _int_find_2d(integer[:,:] a, integer2[:] va):
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 @cython.wraparound(False)   # Deactivate negative indexing.
-def _int_find_nd(a, integer[:] a0, integer2[:] va):
+def _unsigned_find_2d(unsignedinteger[:,:] a, unsignedinteger2[:] va):
     """
     Returns an index of the first occurrence of v in a.
     If v is missing from a, returns -1.
     """
-    cdef integer2 v = va[0]
+    cdef unsignedinteger2 v = va[0]
+    cdef Py_ssize_t n = a.shape[0]
+    cdef Py_ssize_t m = a.shape[1]
+    cdef Py_ssize_t i, j
+
+    for i in range(n):
+        for j in range(m):
+            if a[i, j] == v:
+                return m*i+j
+    return -1
+
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing.
+def _signed_find_nd(a, signedinteger[:] a0, signedinteger2[:] va):
+    """
+    Returns an index of the first occurrence of v in a.
+    If v is missing from a, returns -1.
+    """
+    cdef signedinteger2 v = va[0]
     cdef Py_ssize_t res = -1
     cdef Py_ssize_t i, j
     cdef Py_ssize_t n
-    cdef np.ndarray[integer] ch
+    cdef np.ndarray[signedinteger] ch
+    #cdef integer[:] ch
+    for i, chunk in enumerate(np.nditer(a, flags=['external_loop'], order='C')):
+        ch = chunk
+        n = ch.shape[0]
+        for j in range(n):
+            if ch[j] == v:
+                return i*n+j
+    return -1
+
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing.
+def _unsigned_find_nd(a, unsignedinteger[:] a0, unsignedinteger2[:] va):
+    """
+    Returns an index of the first occurrence of v in a.
+    If v is missing from a, returns -1.
+    """
+    cdef unsignedinteger2 v = va[0]
+    cdef Py_ssize_t res = -1
+    cdef Py_ssize_t i, j
+    cdef Py_ssize_t n
+    cdef np.ndarray[unsignedinteger] ch
     #cdef integer[:] ch
     for i, chunk in enumerate(np.nditer(a, flags=['external_loop'], order='C')):
         ch = chunk
@@ -135,7 +238,6 @@ def _float_find_nd(a, int_or_float[:] a0, cfloating[:] va, cfloating rtol=1e-05,
             if minv < ch[j] < maxv:
                 return i*n+j
     return -1
-
 
 #@cython.boundscheck(False)  # Deactivate bounds checking
 #@cython.wraparound(False)   # Deactivate negative indexing.
@@ -297,6 +399,13 @@ def _nan_find(a, sorted=False):
             return i
     return -1
 
+if sys.platform == 'win32':
+    def is_complex256(a, v):
+        return False
+else:
+    def is_complex256(a, v):
+        return np.issubdtype(a.dtype, np.complex256) or isinstance(v, np.complex256)
+
 def find(a, v, rtol=1e-05, atol=1e-08, sorted=False, missing=-1, raises=False):
 #    if not isinstance(a, np.ndarray):
 #        a = np.array(a)
@@ -305,9 +414,10 @@ def find(a, v, rtol=1e-05, atol=1e-08, sorted=False, missing=-1, raises=False):
     if sorted and a.ndim != 1:
         raise ValueError(f'`sorted=True` optimization only works for 1D arrays, a.ndim={a.ndim}')
 
+    res = None
     generic_float_mode = complex_mode = float_mode = int_mode = nan_mode \
-                       = generic_mode = False
-    if np.issubdtype(a.dtype, np.complex256) or isinstance(v, np.complex256):
+        = generic_mode = signed_int_mode = False
+    if is_complex256(a, v):
         generic_float_mode = True
         complex_mode = True
     elif np.issubdtype(a.dtype, np.float16) or isinstance(v, np.float16):
@@ -329,48 +439,75 @@ def find(a, v, rtol=1e-05, atol=1e-08, sorted=False, missing=-1, raises=False):
          isinstance(v, (float, np.floating)):
         float_mode = True
     elif np.issubdtype(a.dtype, np.integer):
-        if isinstance(v, np.integer):
-            v = v.item()
-        elif not isinstance(v, int):
+        if isinstance(v, int):
+            v = np.int_(v)
+        elif not isinstance(v, np.integer):
             raise ValueError('Incompatible types of `a` (np.array of '
                             f'{a.dtype}) and `v` ({type(v)})')
+        a_signed, v_signed = np.issubdtype(a.dtype, np.signedinteger), isinstance(v, np.signedinteger)
+        if a_signed and v_signed:
+            signed_int_mode = True
+        elif not a_signed and not v_signed:
+            pass # signed_int_mode = False
+        # mixed signedness
+        elif v_signed: # and a is unsigned
+            if v < 0:
+                res = -1
+            else:
+                v = np.uint64(v)
+                # signed_int_mode = False
+        else: # unsigned a and signed v
+            if isinstance(v, np.uint64) and v > 2**63:
+                res = -1
+            else:
+                v = np.int64(v)
+                signed_int_mode = True
         int_mode = True
     elif isinstance(v, (float, np.datetime64)) and np.isnan(v):
         nan_mode = True
     else:
         generic_mode = True
     
-    if complex_mode and sorted:
-        raise ValueError('`sorted=True` optimization cannot be used with complex numbers')
-    elif generic_float_mode:
-        if sorted:
-            res = _py_float_find_sorted(a, v, rtol=rtol, atol=atol)
-        else:
-            res = _py_float_find_unsorted(a, v, rtol=rtol, atol=atol)
-    elif complex_mode:
-        if np.isfinite(v):
-            res = _complex_find_nd(a, np.zeros(1, dtype=a.dtype), v, rtol=rtol, atol=atol)
-        else:
-            res = _generic_float_find(a, v, sorted=False)
-    elif float_mode:
-        if np.isfinite(v):
+    if res is None:
+        if complex_mode and sorted:
+            raise ValueError('`sorted=True` optimization cannot be used with complex numbers')
+        elif generic_float_mode:
             if sorted:
-                res = _float_find_sorted(a, v, rtol=rtol, atol=atol)
+                res = _py_float_find_sorted(a, v, rtol=rtol, atol=atol)
             else:
-                res = _float_find_nd(a, np.zeros(1, dtype=a.dtype), np.array([v]), rtol=rtol, atol=atol)
+                res = _py_float_find_unsorted(a, v, rtol=rtol, atol=atol)
+        elif complex_mode:
+            if np.isfinite(v):
+                res = _complex_find_nd(a, np.zeros(1, dtype=a.dtype), v, rtol=rtol, atol=atol)
+            else:
+                res = _generic_float_find(a, v, sorted=False)
+        elif float_mode:
+            if np.isfinite(v):
+                if sorted:
+                    res = _float_find_sorted(a, v, rtol=rtol, atol=atol)
+                else:
+                    res = _float_find_nd(a, np.zeros(1, dtype=a.dtype), np.array([v]), rtol=rtol, atol=atol)
+            else:
+                res = _generic_float_find(a, v, sorted=sorted)
+        elif int_mode and not sorted:
+            if a.ndim == 1:
+                if signed_int_mode:
+                    res = _signed_find_1d(a, np.array([v]))
+                else:
+                    res = _unsigned_find_1d(a, np.array([v]))
+            elif a.ndim == 2:
+                if signed_int_mode:
+                    res = _signed_find_2d(a, np.array([v]))
+                else:
+                    res = _unsigned_find_2d(a, np.array([v]))
+            elif signed_int_mode:
+                res = _signed_find_nd(a, np.array([v]))
+            else:
+                res = _unsigned_find_nd(a, np.array([v]))
+        elif nan_mode:
+            res = _nan_find(a, sorted=sorted)
         else:
-            res = _generic_float_find(a, v, sorted=sorted)
-    elif int_mode and not sorted:
-        if a.ndim == 1:
-            res = _int_find_1d(a, np.array([v]))
-        elif a.ndim == 2:
-            res = _int_find_2d(a, np.array([v]))
-        else:
-            res = _int_find_nd(a, np.array([v]))
-    elif nan_mode:
-        res = _nan_find(a, sorted=sorted)
-    else:
-        res = _generic_find(a, v, sorted=sorted)
+            res = _generic_find(a, v, sorted=sorted)
     
     if a.ndim > 1 and not generic_mode and not generic_float_mode and res != -1:
         return np.unravel_index(res, a.shape)
@@ -382,67 +519,75 @@ def find(a, v, rtol=1e-05, atol=1e-08, sorted=False, missing=-1, raises=False):
     else:
         return res
 
-## distutils: include_dirs = C:\Users\ASUS\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\core\include
-## cython: language_level=3
-#
-#import numpy as np
-#cimport numpy as np
-#
-#cimport cython
-#
-#ctypedef fused integer:
-#    np.int64_t
-#    np.int32_t
-#    np.int16_t
-#    np.int8_t
-#    np.uint64_t
-#    np.uint32_t
-#    np.uint16_t
-#    np.uint8_t
-#
-#ctypedef fused floating:
-#    np.float64_t
-#    np.float32_t
-#
-#ctypedef fused int_or_float:
-#    integer
-#    floating
-#
-#ctypedef fused int_or_float2:
-#    integer
-#    floating
-#
-#ctypedef fused complexfloating:
-#    np.complex128_t
-#    np.complex64_t
-#
-##ctypedef fused inexact:
-##    floating
-##    complexfloating
-#
-#ctypedef fused number:
-#    integer
-#    floating
-#    complexfloating
+
 
 # _____________________  first_above __________________________
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 @cython.wraparound(False)   # Deactivate negative indexing.
-def _int_or_float_first_above(int_or_float[:] a, int_or_float2[:] v):
+def _same_type_first_above(int_or_float[:] a, int_or_float v):
     """
     Returns an index of the first occurrence of c in a such that c > v
     If v is missing from a, returns len(a).
     """
     cdef Py_ssize_t n = a.shape[0]
     cdef Py_ssize_t i
-    cdef int_or_float2 v0 = v[0]
+
+    for i in range(n):
+        if a[i] > v:
+            return i
+    i = -1
+    return i
+
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing.
+def _float_first_above(int_or_float[:] a, floating[:] v):
+    """
+    Returns an index of the first occurrence of c in a such that c > v
+    If v is missing from a, returns len(a).
+    """
+    cdef Py_ssize_t n = a.shape[0]
+    cdef Py_ssize_t i
+    cdef floating v0 = v[0]
 
     for i in range(n):
         if a[i] > v0:
             return i
     i = -1
     return i
+
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing.
+def _signed_first_above(signedinteger[:] a, signedinteger2[:] v):
+    """
+    Two signed ints
+    """
+    cdef Py_ssize_t n = a.shape[0]
+    cdef Py_ssize_t i
+    cdef signedinteger2 v0 = v[0]
+
+    for i in range(n):
+        if a[i] > v0:
+            return i
+    i = -1
+    return i
+
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing.
+def _unsigned_first_above(unsignedinteger[:] a, unsignedinteger2[:] v):
+    """
+    Two unsigned ints
+    """
+    cdef Py_ssize_t n = a.shape[0]
+    cdef Py_ssize_t i
+    cdef unsignedinteger2 v0 = v[0]
+
+    for i in range(n):
+        if a[i] > v0:
+            return i
+    i = -1
+    return i
+
 
 def _generic_first_above(a, v):
     indices = np.where(a>v)
@@ -451,7 +596,15 @@ def _generic_first_above(a, v):
     else:
         return -1
 
+def both_signed(a, v):
+    return np.issubdtype(a.dtype, np.signedinteger) and isinstance(v, np.signedinteger) or \
+           np.issubdtype(a.dtype, np.unsignedinteger) and isinstance(v, np.unsignedinteger)
+
 def first_above(a, v, sorted=False, missing=-1, raises=False):
+    """
+    Returns an index of the first occurrence of c in a such that c > v
+    If v is missing from a, returns len(a).
+    """
     a = np.asarray(a)
     
     if np.issubdtype(a.dtype, complex) or isinstance(v, complex):
@@ -462,17 +615,45 @@ def first_above(a, v, sorted=False, missing=-1, raises=False):
 
     if a.ndim != 1:
         raise ValueError(f'`a` is expected to be 1-dimensional, got {a.ndim}-dimensional array instead')
+
+    if len(a) == 0:
+        res = -1
     
-    if sorted:
+    elif sorted:
         res = np.searchsorted(a, v, side='right')
         if res == a.shape[0]:
             res = -1
-    else:
-        if np.issubdtype(a.dtype, np.integer) or np.issubdtype(a.dtype, np.floating) and \
-           not np.issubdtype(a.dtype, np.float16):
-            res = _int_or_float_first_above(a, np.array([v]))
-        else:
+    
+    if np.issubdtype(a.dtype, np.number) and isinstance(v, a.dtype.type) and not isinstance(v, np.float16):
+        res = _same_type_first_above(a, v)
+
+    elif np.issubdtype(a.dtype, np.floating) or isinstance(v, np.floating):
+        if not np.issubdtype(a.dtype, np.float16) and not isinstance(v, np.float16):
+            res = _float_first_above(a, np.array([v], dtype=np.float64))
+        else: 
             res = _generic_first_above(a, v)
+    
+    elif np.issubdtype(a.dtype, np.integer) and isinstance(v, np.integer):
+        a_signed, v_signed = np.issubdtype(a.dtype, np.signedinteger), isinstance(v, np.signedinteger)
+        if a_signed and v_signed:
+            res = _signed_first_above(a, np.array([v]))
+        elif not a_signed and not v_signed:
+            res = _unsigned_first_above(a, np.array([v]))
+        # mixed signedness
+        elif v_signed:     # a unsigned
+            if v < 0:
+                res = 0
+            else:
+                res = _unsigned_first_above(a, np.array([v], dtype=np.uint64))
+        else: # v signed, a unsigned
+            if isinstance(v, np.uint64) and v > 2**63:
+                res = -1
+            else:
+                res = _signed_first_above(a, np.array([v], dtype=np.int64))
+    else:
+        res = _generic_first_above(a, v)
+    
+    # format the result
     if res == -1:
         if raises:
             raise ValueError(f'{v} is not in array')
@@ -480,41 +661,6 @@ def first_above(a, v, sorted=False, missing=-1, raises=False):
             return missing
     else:
         return res
-
-## distutils: include_dirs = C:\Users\ASUS\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\core\include
-## cython: language_level=3
-#
-#import numpy as np
-#cimport numpy as np
-#
-#cimport cython
-#
-#ctypedef fused integer:
-#    np.int64_t
-#    np.int32_t
-#    np.int16_t
-#    np.int8_t
-#    np.uint64_t
-#    np.uint32_t
-#    np.uint16_t
-#    np.uint8_t
-#
-#ctypedef fused floating:
-#    np.float64_t
-#    np.float32_t
-#
-#ctypedef fused complexfloating:
-#    np.complex128_t
-#    np.complex64_t
-#
-#ctypedef fused int_or_float:
-#    integer
-#    floating
-
-#ctypedef fused numeric:
-#    integer
-#    floating
-#    complexfloating
 
 
 # _____________________  first_nonzero __________________________
