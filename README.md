@@ -8,11 +8,14 @@
 
 A collection of three cython-optimized search functions for NumPy. When the required value is found,
 they return immediately, without scanning the whole array. It can result in 1000x or larger speedups for 
-huge arrays if the value is located close to the the beginning of the array.
+huge arrays if the value is located close to the the beginning of the array. It is at least as fast as 
+np.where() if the value is close to the end of the array.
 
 ## Installation: 
 
     pip install ndfind
+    
+Writen in Cython. Binary wheels built for Python v3.8 .. v3.11 on Windows, Linux and Mac OS.
 
 ## Contents
 
@@ -29,8 +32,13 @@ Advanced usage:
     If either a or v (or both) is of floating type, the parameters
     `atol` (absolute tolerance) and `rtol` (relative tolerance) 
     are used for comparison (see `np.isclose()` for details).
+    
+    For 1D returns the index as an integer scalar; for 2D and above, returns a tuple of indices.
+    
+    In 2D and above the the values in `a` are always tested and returned in
+    row-major, C-style order.
    
-    Otherwise, returns the `missing` value (-1 by default)
+    If `v` is not in `a`, returns the `missing` value (-1 by default)
     or raises a `ValueError` if `raises=True`.
 
     For example,
@@ -60,14 +68,12 @@ Advanced usage:
     `atol` (absolute tolerance) and `rtol` (relative tolerance) 
     are used for comparison (see `np.isclose()` for details).
 
-    In 2D and above the the values in `a` are always tested and returned in
-    row-major, C-style order.
-
     If there is no value in `a` greater than `v`, returns the `default` value 
     (-1 by default) or raises a `ValueError` if `raises=True`.
 
     `sorted`, use binary search to speed things up (works only if the array is sorted)
 
+    `a` must be 1-dimensional.
     
     For example,
 
@@ -89,12 +95,12 @@ Advanced usage:
     For example,
 
 ```python
->>> first_nonzero([0, 0, 7, 0, 5])
-2
->>> first_nonzero([False, True, False, False, True])
-1
->>> first_nonzero([[0, 0, 0, 0], [0, 0, 5, 3]])
-(1, 2)
+    >>> first_nonzero([0, 0, 7, 0, 5])
+    2
+    >>> first_nonzero([False, True, False, False, True])
+    1
+    >>> first_nonzero([[0, 0, 0, 0], [0, 0, 5, 3]])
+    (1, 2)
 ```
 
 ## Testing
