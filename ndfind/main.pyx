@@ -1,10 +1,9 @@
+# distutils: include_dirs = /home/lev/try_ndfind/env/lib/python3.9/site-packages/numpy/core/include
 # distutils: define_macros=NPY_NO_DEPRECATED_API=1
 # cython: language_level=3
 import sys
 import numpy as np
 cimport numpy as np
-
-from cython cimport floating as cfloating
 
 cimport cython
 
@@ -216,16 +215,16 @@ def _unsigned_find_nd(a, unsignedinteger[:] a0, unsignedinteger2[:] va):
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 @cython.wraparound(False)   # Deactivate negative indexing.
-def _float_find_nd(a, int_or_float[:] a0, cfloating[:] va, cfloating rtol=1e-05, cfloating atol=1e-08):
+def _float_find_nd(a, int_or_float[:] a0, floating[:] va, floating rtol=1e-05, floating atol=1e-08):
     """
     Returns an index of the first occurrence of v in a.
     If v is missing from a, returns -1.
     """
 
-    cdef cfloating v = va[0]
-    cdef cfloating delta = atol + rtol*abs(v)
-    cdef cfloating minv = v - delta
-    cdef cfloating maxv = v + delta
+    cdef floating v = va[0]
+    cdef floating delta = atol + rtol*abs(v)
+    cdef floating minv = v - delta
+    cdef floating maxv = v + delta
 
     cdef Py_ssize_t res = -1
     cdef Py_ssize_t i, j

@@ -1,11 +1,9 @@
-# distutils: include_dirs = C:\Users\ASUS\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\core\include
+# distutils: include_dirs = /home/lev/try_ndfind/env/lib/python3.9/site-packages/numpy/core/include
 # cython: language_level=3
-# include_dirs = /home/lev/try_ndfind/env/lib/python3.9/site-packages/numpy/core/include
+# include_dirs = C:\Users\ASUS\AppData\Local\Programs\Python\Python310\lib\site-packages\numpy\core\include
 import sys
 import numpy as np
 cimport numpy as np
-
-from cython cimport floating as cfloating
 
 cimport cython
 
@@ -218,16 +216,16 @@ def _unsigned_find_nd(a, unsignedinteger[:] a0, unsignedinteger2[:] va):
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 @cython.wraparound(False)   # Deactivate negative indexing.
-def _float_find_nd(a, int_or_float[:] a0, cfloating[:] va, cfloating rtol=1e-05, cfloating atol=1e-08):
+def _float_find_nd(a, int_or_float[:] a0, floating[:] va, floating rtol=1e-05, floating atol=1e-08):
     """
     Returns an index of the first occurrence of v in a.
     If v is missing from a, returns -1.
     """
 
-    cdef cfloating v = va[0]
-    cdef cfloating delta = atol + rtol*abs(v)
-    cdef cfloating minv = v - delta
-    cdef cfloating maxv = v + delta
+    cdef floating v = va[0]
+    cdef floating delta = atol + rtol*abs(v)
+    cdef floating minv = v - delta
+    cdef floating maxv = v + delta
 
     cdef Py_ssize_t res = -1
     cdef Py_ssize_t i, j
@@ -457,7 +455,6 @@ def find(a, v, rtol=1e-05, atol=1e-08, sorted=False, missing=-1, raises=False):
                 res = -1
             else:
                 v = np.uint64(v)
-                print(v, type(v))
                 # signed_int_mode = False
         else: # unsigned a and signed v
             if isinstance(v, np.uint64) and v > 2**63:
