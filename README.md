@@ -11,23 +11,22 @@ they return immediately, without scanning the whole array. It can result in 1000
 huge arrays if the value is located close to the the beginning of the array. It is at least as fast as 
 `np.where()` if the value is close to the end of the array.
 
-## Installation: 
-
-    pip install ndfind
-    
-Writen in Cython. Binary wheels built for Python v3.8 .. v3.11 on Windows, Linux and Mac OS.
-
-## Contents
-
-Basic usage:  
 - `find(a, v)` finds v in a, returns index of the first match or -1 if not found
 - `first_above(a, v)` finds first element in a that is strictly greater than `v`, 
 returns its index or -1 if not found  
 - `first_nonzero(a)` finds the first nonzero element in a, 
 returns its index or -1 if not found
 
-Advanced usage:
+## Installation: 
+
+    pip install ndfind
+    
+Writen in Cython. Binary wheels built for Python v3.8 .. v3.11 on Windows, Linux and Mac OS.
+
+## Documentation
+
 - `find(a, v, rtol=1e-05, atol=1e-08, sorted=False, missing=-1, raises=False)`
+
     Returns the index of the first element in `a` equal to `v`.
     If either a or v (or both) is of floating type, the parameters
     `atol` (absolute tolerance) and `rtol` (relative tolerance) 
@@ -63,6 +62,7 @@ Advanced usage:
 ```
 
 - `first_above(a, v, sorted=False, missing=-1, raises=False)`
+
     Returns the index of the first element in `a` strictly greater than `v`.
     If either a or v (or both) is of floating type, the parameters
     `atol` (absolute tolerance) and `rtol` (relative tolerance) 
@@ -87,6 +87,7 @@ Advanced usage:
 ```
 
 - `first_nonzero(a, missing=-1, raises=False)`
+
     Returns the index of the first nonzero element in `a`.
 
     In 2D and above the the values in `a` are always tested and returned in
