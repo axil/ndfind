@@ -61,10 +61,10 @@ jobs:
       run: python -m cibuildwheel --output-dir dist/
       env:
         CIBW_BUILD: >-
-          cp37-*_x86_64 cp38-*_x86_64 cp39-*_x86_64 cp310-*_x86_64 cp311-*_x86_64 
-          cp37-win_amd64 cp38-win_amd64 cp39-win_amd64 cp310-win_amd64 cp311-win_amd64 
+          cp38-*_x86_64 cp39-*_x86_64 cp310-*_x86_64 cp311-*_x86_64 
+          cp38-win_amd64 cp39-win_amd64 cp310-win_amd64 cp311-win_amd64 
         CIBW_SKIP: >-
-          cp37-musllinux_x86_64 cp38-musllinux_x86_64 cp39-musllinux_x86_64 
+          cp38-musllinux_x86_64 cp39-musllinux_x86_64 
           cp310-musllinux_x86_64 cp311-musllinux_x86_64
 
 #    - uses: actions/upload-artifact@v3
