@@ -21,7 +21,7 @@ returns its index or -1 if not found
 
     pip install ndfind
     
-Writen in Cython. Binary wheels built for Python v3.8 .. v3.11 on Windows, Linux and Mac OS.
+Writen in Cython. Binary wheels built for Python 3.8-3.11 on Windows, Linux, and Mac OS.
 
 ## Documentation
 
